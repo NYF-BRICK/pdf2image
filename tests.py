@@ -11,7 +11,6 @@ from inspect import signature
 from subprocess import Popen, PIPE
 from tempfile import TemporaryDirectory
 from multiprocessing.dummy import Pool
-from memory_profiler import profile as profile_memory
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -31,6 +30,8 @@ from pdf2image.exceptions import (
 from functools import wraps
 
 PROFILE_MEMORY = os.environ.get("PROFILE_MEMORY", False)
+if PROFILE_MEMORY:
+    from memory_profiler import profile as profile_memory
 
 try:
     subprocess.call(
@@ -1744,6 +1745,20 @@ class PDFConversionMethods(unittest.TestCase):
             imgs = convert_from_path("./tests/test_241.pdf", timeout=1)
         print(
             "test_timeout_convert_from_path_241: {} sec".format(
+                time.time() - start_time
+            )
+        )
+
+    @profile
+    @unittest.skipIf(not POPPLER_INSTALLED, "Poppler is not installed!")
+    def test_pdfinfo_first_and_last_page(self):
+        start_time = time.time()
+        info_first_path = pdfinfo_from_path("./tests/test_14.pdf", first_page=1, last_page=2)
+
+        self.assertIn("Page    1 rot", info_first_path)
+
+        print(
+            "test_pdfinfo_first_and_last_page: {} sec".format(
                 time.time() - start_time
             )
         )
